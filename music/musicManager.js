@@ -22,16 +22,22 @@ async function playSong(message, query) {
   if (play.yt_validate(query) === "video") {
     const info = await play.video_info(query);
     song = {
-      title: info.video_details.title,
-      url: query
-    };
+  title: info.video_details.title,
+  url: query,
+  duration: info.video_details.durationInSec,
+  thumbnail: info.video_details.thumbnails[0].url
+};
+
   } else {
     const result = await play.search(query, { limit: 1 });
     if (!result.length) return message.reply("No results found.");
-    song = {
-      title: result[0].title,
-      url: result[0].url
-    };
+   song = {
+  title: result[0].title,
+  url: result[0].url,
+  duration: result[0].durationInSec,
+  thumbnail: result[0].thumbnails[0].url
+};
+
   }
 
   let queue = queues.get(message.guild.id);
