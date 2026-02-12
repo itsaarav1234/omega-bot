@@ -4,7 +4,7 @@ client.on("messageCreate", async message => {
   const content = message.content.toLowerCase();
 
   // 👑 AUTO REACT
-  if (content.includes("omega")) {
+  if (content.includes("Neon")) {
     message.react("👑").catch(() => {});
   }
 
