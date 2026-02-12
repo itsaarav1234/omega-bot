@@ -128,27 +128,52 @@ async function startPlaying(guildId, textChannel = null) {
 
   if (textChannel) sendNowPlaying(textChannel, queue);
 }
-
 function sendNowPlaying(channel, queue) {
+  const song = queue.songs[0];
+
   const embed = new EmbedBuilder()
+    .setColor("#8e44ad")
     .setTitle("🎵 Now Playing")
-    .setDescription(`**${queue.songs[0].title}**`)
-    .setColor("Purple")
+    .setDescription(`**${song.title}**`)
+    .setThumbnail(song.thumbnail || null)
     .addFields(
+      { name: "⏱ Duration", value: formatDuration(song.duration), inline: true },
       { name: "🔁 Loop", value: queue.loop ? "ON" : "OFF", inline: true },
+      { name: "🔊 Volume", value: `${Math.round(queue.volume * 100)}%`, inline: true },
       { name: "🎚 Filter", value: queue.filter, inline: true }
-    );
+    )
+    .setFooter({ text: "Omega Premium Music System" });
 
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId("pause").setLabel("⏸").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("resume").setLabel("▶").setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId("skip").setLabel("⏭").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("stop").setLabel("⏹").setStyle(ButtonStyle.Danger),
-    new ButtonBuilder().setCustomId("loop").setLabel("🔁").setStyle(ButtonStyle.Secondary)
+    new ButtonBuilder()
+      .setCustomId("pause")
+      .setEmoji("⏸")
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId("resume")
+      .setEmoji("▶")
+      .setStyle(ButtonStyle.Success),
+
+    new ButtonBuilder()
+      .setCustomId("skip")
+      .setEmoji("⏭")
+      .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+      .setCustomId("stop")
+      .setEmoji("⏹")
+      .setStyle(ButtonStyle.Danger),
+
+    new ButtonBuilder()
+      .setCustomId("loop")
+      .setEmoji("🔁")
+      .setStyle(ButtonStyle.Secondary)
   );
 
   channel.send({ embeds: [embed], components: [row] });
 }
+
 
 function handleButtons(interaction) {
   const queue = queues.get(interaction.guild.id);
@@ -190,3 +215,11 @@ module.exports = {
   handleButtons,
   setFilter
 };
+function formatDuration(seconds) {
+  if (!seconds) return "LIVE";
+
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
