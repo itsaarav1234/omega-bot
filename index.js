@@ -1,37 +1,3 @@
-require("dotenv").config();
-const fs = require("fs");
-const path = require("path");
-const express = require("express");
-const { Client, GatewayIntentBits } = require("discord.js");
-
-const app = express();
-app.get("/", (req, res) => res.send("Omega Bot is Alive 👑"));
-app.listen(process.env.PORT || 3000);
-
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
-});
-
-const prefix = "!";
-client.commands = new Map();
-
-// Load commands
-const commandsPath = path.join(__dirname, "commands");
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
-
-for (const file of commandFiles) {
-  const command = require(`./commands/${file}`);
-  client.commands.set(command.name, command);
-}
-
-client.once("ready", () => {
-  console.log(`Logged in as ${client.user.tag}`);
-});
-
 client.on("messageCreate", async message => {
   if (message.author.bot) return;
 
@@ -42,7 +8,7 @@ client.on("messageCreate", async message => {
     message.react("👑").catch(() => {});
   }
 
-  // 🤖 AI Reply When Mentioned (REMOVE THIS BLOCK IF SKIPPING AI)
+  // 🤖 AI Reply When Mentioned
   if (message.mentions.has(client.user) && process.env.OPENAI_KEY) {
     try {
       const OpenAI = require("openai");
@@ -82,19 +48,13 @@ client.on("messageCreate", async message => {
 });
 
 
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are Omega, an elite intelligent Discord bot." },
-        { role: "user", content: message.content }
-      ]
-    });
+// 🎛 MUSIC BUTTON LISTENER (PASTE HERE)
+client.on("interactionCreate", async interaction => {
+  if (!interaction.isButton()) return;
 
-    message.reply(response.choices[0].message.content.slice(0, 2000));
-  } catch (err) {
-    console.error(err);
-  }
+  const music = require("./music/musicManager");
+  music.handleButtons(interaction);
 });
+
 
 client.login(process.env.TOKEN);
