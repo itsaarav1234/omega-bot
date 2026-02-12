@@ -1,4 +1,6 @@
 require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
 const express = require("express");
 const { Client, GatewayIntentBits } = require("discord.js");
 
@@ -14,15 +16,35 @@ const client = new Client({
   ]
 });
 
+const prefix = "!";
+client.commands = new Map();
+
+// Load commands
+const commandsPath = path.join(__dirname, "commands");
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
+
+for (const file of commandFiles) {
+  const command = require(`./commands/${file}`);
+  client.commands.set(command.name, command);
+}
+
 client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
-client.on("messageCreate", async (message) => {
-  if (message.author.bot) return;
+client.on("messageCreate", message => {
+  if (!message.content.startsWith(prefix) || message.author.bot) return;
 
-  if (message.content === "!ping") {
-    message.reply("Pong 👑");
+  const args = message.content.slice(prefix.length).trim().split(/ +/);
+  const commandName = args.shift().toLowerCase();
+
+  if (!client.commands.has(commandName)) return;
+
+  try {
+    client.commands.get(commandName).execute(message, args);
+  } catch (error) {
+    console.error(error);
+    message.reply("There was an error executing that command.");
   }
 });
 
