@@ -209,12 +209,36 @@ function setFilter(message, filterName) {
   startPlaying(message.guild.id);
   message.reply(`🎚 Filter set to **${filterName}**`);
 }
+function showQueue(message) {
+  const queue = queues.get(message.guild.id);
+
+  if (!queue || !queue.songs.length) {
+    return message.reply("Queue is empty 🎵");
+  }
+
+  const description = queue.songs
+    .map((song, index) =>
+      `${index === 0 ? "▶️" : `${index}.`} **${song.title}**`
+    )
+    .slice(0, 10)
+    .join("\n");
+
+  const embed = new EmbedBuilder()
+    .setColor("#8e44ad")
+    .setTitle("🎶 Music Queue")
+    .setDescription(description)
+    .setFooter({ text: `${queue.songs.length} song(s) in queue` });
+
+  message.reply({ embeds: [embed] });
+}
 
 module.exports = {
   playSong,
   handleButtons,
-  setFilter
+  setFilter,
+  showQueue
 };
+
 function formatDuration(seconds) {
   if (!seconds) return "LIVE";
 
